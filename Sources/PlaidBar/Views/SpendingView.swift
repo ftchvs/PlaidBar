@@ -51,6 +51,9 @@ struct SpendingView: View {
     }
 
     var body: some View {
+        let categories = chartCategories
+        let total = totalFiltered
+
         VStack(spacing: 12) {
             // Period picker
             Picker("Period", selection: $selectedPeriod) {
@@ -64,14 +67,14 @@ struct SpendingView: View {
             .padding(.top, 8)
 
             // Total — hero amount, no redundant label
-            Text(Formatters.currency(totalFiltered, format: .full))
+            Text(Formatters.currency(total, format: .full))
                 .font(.title2.bold())
                 .monospacedDigit()
                 .contentTransition(.numericText())
 
             // Category breakdown legend (above chart so it's always visible)
             VStack(spacing: 4) {
-                ForEach(chartCategories, id: \.0) { category, amount in
+                ForEach(categories, id: \.0) { category, amount in
                     HStack(spacing: 8) {
                         Circle()
                             .fill(Color(hex: category.colorHex) ?? .gray)
@@ -85,7 +88,7 @@ struct SpendingView: View {
                         Text(Formatters.currency(amount, format: .full))
                             .monospacedDigit()
 
-                        Text(Formatters.percent(amount / totalFiltered * 100, decimals: 0))
+                        Text(Formatters.percent(amount / total * 100, decimals: 0))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(width: 35, alignment: .trailing)
@@ -96,8 +99,8 @@ struct SpendingView: View {
             }
 
             // Donut chart
-            if !chartCategories.isEmpty {
-                Chart(chartCategories, id: \.0) { category, amount in
+            if !categories.isEmpty {
+                Chart(categories, id: \.0) { category, amount in
                     SectorMark(
                         angle: .value("Amount", amount),
                         innerRadius: .ratio(0.6),
@@ -105,8 +108,8 @@ struct SpendingView: View {
                     )
                     .foregroundStyle(Color(hex: category.colorHex) ?? .gray)
                     .annotation(position: .overlay) {
-                        if amount / totalFiltered > 0.1 {
-                            Text(Formatters.percent(amount / totalFiltered * 100, decimals: 0))
+                        if amount / total > 0.1 {
+                            Text(Formatters.percent(amount / total * 100, decimals: 0))
                                 .font(.caption2)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
@@ -122,9 +125,7 @@ struct SpendingView: View {
     }
 
     private static func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
+        Formatters.transactionDateString(date)
     }
 }
 

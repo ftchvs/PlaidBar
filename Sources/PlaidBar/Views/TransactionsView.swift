@@ -86,7 +86,6 @@ struct TransactionsView: View {
 
 struct TransactionRow: View {
     let transaction: TransactionDTO
-    @State private var isHovered = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -125,11 +124,7 @@ struct TransactionRow: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .contentShape(Rectangle())
-        .background(isHovered ? Color.primary.opacity(0.04) : .clear)
-        .onHover { hovering in
-            isHovered = hovering
-        }
+        .hoverHighlight()
     }
 
     private var amountText: String {

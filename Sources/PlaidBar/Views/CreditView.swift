@@ -62,8 +62,7 @@ struct CreditView: View {
 
 private func utilizationColor(for percent: Double) -> Color {
     switch percent {
-    case 0..<10: return .green
-    case 10..<30: return .green
+    case 0..<30: return .green
     case 30..<50: return .yellow
     case 50..<75: return .orange
     default: return .red

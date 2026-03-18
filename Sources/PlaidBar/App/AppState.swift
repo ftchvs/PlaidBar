@@ -269,9 +269,7 @@ final class AppState {
 
     private static func dateString(daysAgo: Int) -> String {
         let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
+        return Formatters.transactionDateString(date)
     }
 }
 

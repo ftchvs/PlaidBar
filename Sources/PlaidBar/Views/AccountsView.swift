@@ -81,10 +81,12 @@ private struct InstitutionAvatar: View {
         String(name.prefix(1)).uppercased()
     }
 
+    private static let avatarColors: [Color] = [.blue, .green, .orange, .purple, .pink, .teal, .indigo, .mint]
+
     private var color: Color {
-        let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .teal, .indigo, .mint]
-        let hash = abs(name.hashValue)
-        return colors[hash % colors.count]
+        // DJB2 hash for deterministic color across launches (hashValue is randomized per process)
+        let hash = name.utf8.reduce(5381) { ($0 &<< 5) &+ $0 &+ Int($1) }
+        return Self.avatarColors[abs(hash) % Self.avatarColors.count]
     }
 
     var body: some View {
@@ -98,7 +100,6 @@ private struct InstitutionAvatar: View {
 
 struct AccountRow: View {
     let account: AccountDTO
-    @State private var isHovered = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -122,17 +123,13 @@ struct AccountRow: View {
                 if let utilization = account.balances.utilizationPercent {
                     Text(Formatters.percent(utilization))
                         .font(.caption)
-                        .foregroundStyle(utilization > 30 ? .orange : .secondary)
+                        .foregroundStyle(utilization > PlaidBarConstants.creditUtilizationWarningThreshold ? .orange : .secondary)
                 }
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 6)
-        .contentShape(Rectangle())
-        .background(isHovered ? Color.primary.opacity(0.04) : .clear)
-        .onHover { hovering in
-            isHovered = hovering
-        }
+        .hoverHighlight()
     }
 
     private var formattedAmount: String {

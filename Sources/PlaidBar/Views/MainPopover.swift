@@ -95,14 +95,7 @@ struct MainPopover: View {
                             await appState.syncTransactions()
                         }
                     } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .rotationEffect(.degrees(appState.isLoading ? 360 : 0))
-                            .animation(
-                                appState.isLoading
-                                    ? .linear(duration: 1).repeatForever(autoreverses: false)
-                                    : .default,
-                                value: appState.isLoading
-                            )
+                        RefreshIcon(isLoading: appState.isLoading)
                     }
                     .buttonStyle(.borderless)
                     .help("Refresh")
