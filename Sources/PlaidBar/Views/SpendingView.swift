@@ -38,6 +38,14 @@ struct SpendingView: View {
         }.sorted { $0.1 > $1.1 }
     }
 
+    /// Top 5 categories + "Other" rollup to prevent tiny chart slivers
+    private var chartCategories: [(SpendingCategory, Double)] {
+        guard filteredSpending.count > 5 else { return filteredSpending }
+        let top5 = Array(filteredSpending.prefix(5))
+        let otherTotal = filteredSpending.dropFirst(5).reduce(0) { $0 + $1.1 }
+        return top5 + [(.other, otherTotal)]
+    }
+
     private var totalFiltered: Double {
         filteredSpending.reduce(0) { $0 + $1.1 }
     }
@@ -55,14 +63,41 @@ struct SpendingView: View {
             .padding(.horizontal)
             .padding(.top, 8)
 
-            // Total
-            Text("Total: \(Formatters.currency(totalFiltered, format: .full))")
-                .font(.title3)
-                .fontWeight(.semibold)
+            // Total — hero amount, no redundant label
+            Text(Formatters.currency(totalFiltered, format: .full))
+                .font(.title2.bold())
+                .monospacedDigit()
+                .contentTransition(.numericText())
+
+            // Category breakdown legend (above chart so it's always visible)
+            VStack(spacing: 4) {
+                ForEach(chartCategories, id: \.0) { category, amount in
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color(hex: category.colorHex) ?? .gray)
+                            .frame(width: 10, height: 10)
+
+                        Text(category.displayName)
+                            .font(.body)
+
+                        Spacer()
+
+                        Text(Formatters.currency(amount, format: .full))
+                            .monospacedDigit()
+
+                        Text(Formatters.percent(amount / totalFiltered * 100, decimals: 0))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 35, alignment: .trailing)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 2)
+                }
+            }
 
             // Donut chart
-            if !filteredSpending.isEmpty {
-                Chart(filteredSpending, id: \.0) { category, amount in
+            if !chartCategories.isEmpty {
+                Chart(chartCategories, id: \.0) { category, amount in
                     SectorMark(
                         angle: .value("Amount", amount),
                         innerRadius: .ratio(0.6),
@@ -78,32 +113,9 @@ struct SpendingView: View {
                         }
                     }
                 }
-                .frame(height: 150)
+                .chartLegend(.hidden)
+                .frame(height: 170)
                 .padding(.horizontal)
-            }
-
-            // Category breakdown
-            ForEach(filteredSpending, id: \.0) { category, amount in
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color(hex: category.colorHex) ?? .gray)
-                        .frame(width: 10, height: 10)
-
-                    Text(category.displayName)
-                        .font(.body)
-
-                    Spacer()
-
-                    Text(Formatters.currency(amount, format: .full))
-                        .monospacedDigit()
-
-                    Text(Formatters.percent(amount / totalFiltered * 100, decimals: 0))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 35, alignment: .trailing)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 2)
             }
         }
         .padding(.bottom, 8)
