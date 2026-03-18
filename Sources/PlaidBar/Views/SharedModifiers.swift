@@ -21,7 +21,7 @@ extension View {
     }
 }
 
-// MARK: - Refresh Icon (smooth spin via TimelineView)
+// MARK: - Refresh Icon (smooth spin via repeatForever)
 
 struct RefreshIcon: View {
     let isLoading: Bool
@@ -32,21 +32,21 @@ struct RefreshIcon: View {
             .rotationEffect(.degrees(rotation))
             .onChange(of: isLoading) { _, loading in
                 if loading {
-                    spin()
+                    withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                        rotation = 360
+                    }
+                } else {
+                    withAnimation(.linear(duration: 0.3)) {
+                        rotation = 0
+                    }
                 }
             }
             .onAppear {
-                if isLoading { spin() }
+                if isLoading {
+                    withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                        rotation = 360
+                    }
+                }
             }
-    }
-
-    private func spin() {
-        guard isLoading else { return }
-        withAnimation(.linear(duration: 0.8)) {
-            rotation += 360
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            spin()
-        }
     }
 }

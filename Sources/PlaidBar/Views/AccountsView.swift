@@ -52,6 +52,7 @@ struct AccountsView: View {
                         .fontWeight(.semibold)
                         .monospacedDigit()
                         .contentTransition(.numericText())
+                        .animation(.default, value: appState.netBalance)
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 8)

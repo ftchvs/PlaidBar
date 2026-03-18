@@ -17,6 +17,7 @@ struct MainPopover: View {
                         .font(.title2.bold())
                         .monospacedDigit()
                         .contentTransition(.numericText())
+                        .animation(.default, value: appState.netBalance)
 
                     HStack(spacing: 6) {
                         Text("PlaidBar")
@@ -83,11 +84,6 @@ struct MainPopover: View {
                     .help("Add Account")
 
                     Spacer()
-
-                    if appState.isLoading {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                    }
 
                     Button {
                         Task {

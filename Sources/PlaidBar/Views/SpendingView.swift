@@ -71,6 +71,7 @@ struct SpendingView: View {
                 .font(.title2.bold())
                 .monospacedDigit()
                 .contentTransition(.numericText())
+                .animation(.default, value: total)
 
             // Category breakdown legend (above chart so it's always visible)
             VStack(spacing: 4) {
@@ -88,7 +89,7 @@ struct SpendingView: View {
                         Text(Formatters.currency(amount, format: .full))
                             .monospacedDigit()
 
-                        Text(Formatters.percent(amount / total * 100, decimals: 0))
+                        Text(total > 0 ? Formatters.percent(amount / total * 100, decimals: 0) : "—")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(width: 35, alignment: .trailing)
@@ -99,7 +100,7 @@ struct SpendingView: View {
             }
 
             // Donut chart
-            if !categories.isEmpty {
+            if !categories.isEmpty && total > 0 {
                 Chart(categories, id: \.0) { category, amount in
                     SectorMark(
                         angle: .value("Amount", amount),
