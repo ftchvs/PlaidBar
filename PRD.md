@@ -100,6 +100,20 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 |---|-------------|-------------------|
 | 3.16 | Design token completeness | **Given** any v0.3 component is rendered, **When** spacing or color is needed, **Then** it uses tokens from DesignTokens.swift: `Spacing.xxs` (2pt), `Spacing.rowVertical` (6pt), `SemanticColors.sparkline` (.blue), `SemanticColors.brand` (.blue), `SemanticColors.brandSecondary` (.orange), `SemanticColors.recurring` (.indigo) |
 
+### v0.4 (planned)
+
+| # | Issue | Title | Category |
+|---|-------|-------|----------|
+| 4.1 | #7 | SetupView credentials collected but never sent | Enhancement |
+| 4.2 | #8 | SemanticColors has redundant color aliases | Tech debt |
+| 4.3 | #9 | IncomeExpenseChart recomputes monthlyData on every render | Performance |
+| 4.4 | #10 | Formatters.currency copies NumberFormatter on every call | Performance |
+| 4.5 | #12 | NotificationService singleton not testable (needs DI) | Tech debt |
+| 4.6 | #13 | Settings window activation uses fragile window title matching | Fix |
+| 4.7 | #14 | UserDefaults notification settings lack didSet guard | Chore |
+| 4.8 | #15 | SpendingView periodInterval may recompute on every access | Performance |
+| 4.9 | #17 | Activation policy switch may leave dock icon visible | Fix |
+
 ### Future (not committed)
 
 - [ ] Budget alerts per category
@@ -186,8 +200,11 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 
 ### v0.3 Feature-Specific
 
-| Metric | Target | How to Measure |
-|--------|--------|----------------|
-| Recurring detection accuracy | > 90% of known subscriptions detected in sandbox | Manual QA with 10 known recurring merchants |
-| Filter usage rate | > 30% of sessions use at least one filter | Analytics event (local-only counter in UserDefaults) |
-| Notification opt-in rate | > 50% of users who reach Settings | Local-only counter: settings_opened / notifications_enabled |
+| Metric | Baseline (v0.3.0) | Target | Timeframe | How to Measure |
+|--------|--------------------|--------|-----------|----------------|
+| Recurring detection accuracy | 7/7 demo merchants detected (100% sandbox) | >90% user-reported subscriptions in first 5 bug reports | v0.3.1 | Manual QA + user feedback issues |
+| Filter usage rate | 0% (new feature) | >30% of sessions use ≥1 filter | 90 days post-v0.3 | Local UserDefaults counter (planned) |
+| Notification opt-in rate | 0% (new feature) | >50% of users who open Settings | 90 days post-v0.3 | Local counter: settings_opened / notifications_enabled |
+| Notification delivery latency | N/A | <10s after sync completes | Continuous | Timestamp delta: sync_complete → notification_shown |
+| Test suite size | 86 tests, 100% pass | Maintain 100% pass rate | Continuous | `swift test` in CI |
+| Build time (clean) | ~45s M1 | <60s | Per release | GitHub Actions CI timing |
