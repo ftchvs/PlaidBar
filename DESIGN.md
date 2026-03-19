@@ -142,6 +142,90 @@ Category colors from `SpendingCategory.colorHex` — fixed hex values for chart 
 | Filtered out | Hidden (`.transition(.opacity)`) when filter excludes |
 | Tap/hover | `.background(.quaternarySystemFill)` on row |
 
+### TransactionDetailView
+
+**Anatomy:** NavigationStack > Form (grouped) | Header section: category icon (title2) + merchant name (.title3.bold) + raw transaction name (.detailText) | Details section: LabeledContent rows for Amount (color-coded, monospacedDigit), Category (Label with icon), Date, Account, Status (colored dot + "Posted"/"Pending") | Toolbar "Done" button | `.presentationSizing(.fitted)`
+
+**Code reference:** `Sources/PlaidBar/Views/TransactionDetailView.swift`
+
+| State | Behavior |
+|-------|----------|
+| Default (posted expense) | Full details; amount in `expense` color; green "Posted" dot |
+| Pending transaction | Amount in `expense` color; orange "Pending" dot + text |
+| Income transaction | Amount in `income` color with `+` prefix; green "Posted" dot |
+| Expense transaction | Amount in `expense` color (no prefix); green "Posted" dot |
+| Missing category | Category icon falls back to `.other` (`questionmark.circle.fill`); LabeledContent("Category") hidden |
+| Unknown account | Account row shows "Unknown" |
+
+### FilterChipsView
+
+**Anatomy:** `ScrollView(.horizontal)` > `HStack` of `Menu` chips | Each chip: text + chevron.down in capsule background | Active chip: `.accentColor.opacity(0.15)` background, accent foreground | Inactive: `.quaternary.opacity(0.5)` background, `.secondary` foreground | Clear button: `xmark.circle.fill` (appears when ≥1 filter active)
+
+**Code reference:** `Sources/PlaidBar/Views/FilterChipsView.swift`
+
+| State | Behavior |
+|-------|----------|
+| No filters active | 3 chips (Category, Account, Date=All) in inactive style; no clear button |
+| 1+ filters active | Active chip(s) highlighted in accent; clear button visible |
+| Category selected | Chip text changes to category display name (e.g., "Food & Drink") |
+| Account selected | Chip text changes to account name (e.g., "Chase Checking") |
+| Date range selected | Chip text changes to range label (e.g., "This Week") |
+| Clear all tapped | All filters reset: category=nil, accountId=nil, dateRange=.all |
+
+### RecurringView
+
+**Anatomy:** VStack | Header: "EST. MONTHLY COST" (`.sectionTitle()`) + normalized total (`.heroBalance()`) | Divider | `ForEach` of `RecurringRow` items | Empty state: `ContentUnavailableView` with `arrow.clockwise` icon
+
+**Code reference:** `Sources/PlaidBar/Views/RecurringView.swift`
+
+| State | Behavior |
+|-------|----------|
+| Populated | Header shows monthly estimate (normalizes weekly/annual via `monthlyMultiplier`); rows listed by amount descending |
+| Empty (no recurring detected) | `ContentUnavailableView`: "No Recurring Transactions" with explanation text |
+| Normalized amounts | Weekly items × 4.33, annual ÷ 12, quarterly ÷ 3 for monthly total |
+
+### RecurringRow
+
+**Anatomy:** HStack | Category icon (`.body`, `.secondary`, 24pt frame) | VStack: merchant name (`.body`) + frequency badge (`.microText()` in indigo capsule `SemanticColors.recurring.opacity(0.15)`) + average amount (`.detailText()`, monospacedDigit) + "Last: {date}" (`.detailText()`) | `.hoverHighlight()`
+
+**Code reference:** `Sources/PlaidBar/Views/RecurringView.swift` (private struct)
+
+| State | Behavior |
+|-------|----------|
+| Weekly | Badge shows "Weekly" in indigo capsule |
+| Biweekly | Badge shows "Biweekly" in indigo capsule |
+| Monthly | Badge shows "Monthly" in indigo capsule |
+| Quarterly | Badge shows "Quarterly" in indigo capsule |
+| Annual | Badge shows "Annual" in indigo capsule |
+| Hover | `.hoverHighlight()` background applied |
+
+### NotificationSettingsView
+
+**Anatomy:** Form | Master toggle "Enable notifications" | Permission denied warning (if applicable): `exclamationmark.triangle` icon + explanation text | Section "Transaction Alerts": Large transactions toggle + threshold field ($), Low balance toggle + threshold field ($) | Section "Credit Alerts": High utilization toggle + reference to credit warning threshold from General
+
+**Code reference:** `Sources/PlaidBar/Settings/SettingsView.swift`
+
+| State | Behavior |
+|-------|----------|
+| Notifications off | Master toggle off; all sub-toggles and fields disabled |
+| Notifications enabled | Master toggle on; sub-toggles and threshold fields enabled |
+| Permission denied (macOS) | Warning banner: `exclamationmark.triangle` + "Enable in System Settings > Notifications"; master toggle forced off |
+| Individual trigger disabled | Specific toggle off; associated threshold field disabled |
+| High utilization reference | Shows "Uses credit warning threshold ({X}%)" in `.detailText()` — threshold set in General tab |
+
+### SpendingComparison
+
+**Anatomy:** (Inline in SpendingView) VStack | HStack: directional arrow icon + delta text (absolute + percent) in `.callout.weight(.medium)` | "vs. last period" in `.microText()` + `.secondary` | Color: increase → `SemanticColors.negative` (red), decrease → `SemanticColors.positive` (green) | `.contentTransition(.numericText())` animation
+
+**Code reference:** `Sources/PlaidBar/Views/SpendingView.swift` (inline in body)
+
+| State | Behavior |
+|-------|----------|
+| Spending increased | `arrow.up.right` icon; red text; positive delta with "+" prefix |
+| Spending decreased | `arrow.down.right` icon; green text; negative delta |
+| No previous period data | Comparison section hidden entirely (`if previousPeriodSpending > 0`) |
+| Period changed | Recalculates based on `selectedPeriod` (week/month/30d); animated transition |
+
 ### Charts
 
 **Shared behavior:** All charts animate on appearance with `.spring(response: 0.3, dampingFraction: 0.8)`. When `accessibilityReduceMotion` is on, render immediately without animation.
