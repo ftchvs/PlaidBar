@@ -20,6 +20,8 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 3. **Monitor credit utilization** — Keep utilization under 30% for credit score
 4. **Understand spending patterns** — Category breakdown over time
 5. **Stay updated** — Background refresh keeps data fresh without manual action
+6. **Track recurring charges** — "How much am I locked into per month?" answered with one tap to Recurring view
+7. **Get alerted to anomalies** — Large charges, low balances, and high utilization flagged via macOS notifications without opening the app
 
 ## Feature Matrix
 
@@ -131,6 +133,10 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 | Recurring detection: merchant name varies slightly ("NETFLIX.COM" vs "Netflix") | Normalize merchant names using Plaid's `merchant_name` field (not `name`); group by normalized value |
 | Notification threshold set to $0 | Treat as "notify for every transaction"; show warning in settings: "You'll be notified for every transaction" |
 | 1000+ transactions in a single sync | Process in batches of 100; show progress indicator; do not block UI during sync |
+| Recurring with <2 months history | Show empty state; don't classify until at least 2 occurrences with valid interval |
+| Nil merchant name | Excluded from recurring detection (only non-nil `merchantName` grouped) |
+| Zero previous period spending | Comparison section hidden (`guard previousPeriodSpending > 0`) |
+| All transactions filtered out | Show "No transactions match your filters" empty state with clear button |
 
 ### Permission & System Edge Cases
 
@@ -139,6 +145,9 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 | User denies notification permission (macOS) | Notification toggle in settings shows "Disabled — enable in System Settings > Notifications" with deep link |
 | App launched but companion server not running | Show connection error with "Start Server" button; auto-retry every 3 seconds for 30 seconds |
 | Multiple PlaidBar instances launched | Second instance detects existing process via port 8484 check; shows alert and exits |
+| Notification permission revoked in System Settings | On app startup, `loadInitialData()` rechecks permission status; if denied, sets `notificationsEnabled = false` automatically |
+| Duplicate sync (same transaction re-added) | Transaction sync uses id-based upsert (modified replaces by index, removed by id set) |
+| LRU overflow (500+ notified transactions) | Oldest entries evicted first; set kept in sync with ordered array |
 
 ## Non-Goals
 
