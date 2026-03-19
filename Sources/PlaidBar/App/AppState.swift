@@ -36,13 +36,22 @@ final class AppState {
 
     // MARK: - Settings (persisted to UserDefaults)
     var showBalanceInMenuBar: Bool = true {
-        didSet { UserDefaults.standard.set(showBalanceInMenuBar, forKey: Keys.showBalanceInMenuBar) }
+        didSet {
+            guard showBalanceInMenuBar != oldValue else { return }
+            UserDefaults.standard.set(showBalanceInMenuBar, forKey: Keys.showBalanceInMenuBar)
+        }
     }
     var balanceFormat: CurrencyFormat = .abbreviated {
-        didSet { UserDefaults.standard.set(balanceFormat.rawValue, forKey: Keys.balanceFormat) }
+        didSet {
+            guard balanceFormat != oldValue else { return }
+            UserDefaults.standard.set(balanceFormat.rawValue, forKey: Keys.balanceFormat)
+        }
     }
     var creditUtilizationThreshold: Double = 30.0 {
-        didSet { UserDefaults.standard.set(creditUtilizationThreshold, forKey: Keys.creditUtilizationThreshold) }
+        didSet {
+            guard creditUtilizationThreshold != oldValue else { return }
+            UserDefaults.standard.set(creditUtilizationThreshold, forKey: Keys.creditUtilizationThreshold)
+        }
     }
     var refreshInterval: TimeInterval = PlaidBarConstants.backgroundRefreshInterval {
         didSet {
