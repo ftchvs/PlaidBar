@@ -84,21 +84,20 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 |---|-------------|-------------------|
 | 3.10 | Transaction detail sheet | **Given** user taps a transaction row, **When** the detail sheet presents, **Then** it shows: merchant name, raw transaction name, amount (color-coded), category with icon, date, account name, and status (posted/pending with colored dot). Dismiss via "Done" toolbar button |
 | 3.11 | Accessibility on new components | **Given** VoiceOver is enabled, **When** navigating recurring/filter/detail views, **Then** each component provides meaningful labels: FilterChipsView announces active filter count, RecurringRow announces merchant+frequency+amount, TransactionDetailView contains combined accessible elements |
-| 3.12 | Popover dismiss resets filters | **Given** the user has active filters, **When** the popover closes and reopens, **Then** all filter state (@State) is reset to defaults (no category, no account, date = All) |
-| 3.13 | Recent/Recurring toggle | **Given** user is on the Transactions tab, **When** they use the segmented picker, **Then** they can switch between "Recent" (filtered transaction list) and "Recurring" (recurring detection view) with animated transition |
+| 3.12 | Recent/Recurring toggle | **Given** user is on the Transactions tab, **When** they use the segmented picker, **Then** they can switch between "Recent" (filtered transaction list) and "Recurring" (recurring detection view) with animated transition |
 
 #### Spending Enhancements
 
 | # | Requirement | Acceptance Criteria |
 |---|-------------|-------------------|
-| 3.14 | Period-over-period comparison | **Given** spending data exists for current and previous period, **When** the user views the Spending tab, **Then** a comparison shows absolute delta, percentage change, and directional arrow (up = red/negative, down = green/positive). Color semantics: spending increase = negative (red), decrease = positive (green). Section hidden when previous period spending is zero |
-| 3.15 | Spending category color palette | **Given** chart data is rendered, **When** any SpendingCategory is displayed, **Then** it uses the fixed hex color from `SpendingCategory.colorHex` (17 categories). Full palette documented in DESIGN.md |
+| 3.13 | Period-over-period comparison | **Given** spending data exists for current and previous period, **When** the user views the Spending tab, **Then** a comparison shows absolute delta, percentage change, and directional arrow (up = red/negative, down = green/positive). Color semantics: spending increase = negative (red), decrease = positive (green). Section hidden when previous period spending is zero |
+| 3.14 | Spending category color palette | **Given** chart data is rendered, **When** any SpendingCategory is displayed, **Then** it uses the fixed hex color from `SpendingCategory.colorHex` (17 categories). Full palette documented in DESIGN.md |
 
 #### Design System
 
 | # | Requirement | Acceptance Criteria |
 |---|-------------|-------------------|
-| 3.16 | Design token completeness | **Given** any v0.3 component is rendered, **When** spacing or color is needed, **Then** it uses tokens from DesignTokens.swift: `Spacing.xxs` (2pt), `Spacing.rowVertical` (6pt), `SemanticColors.sparkline` (.blue), `SemanticColors.brand` (.blue), `SemanticColors.brandSecondary` (.orange), `SemanticColors.recurring` (.indigo) |
+| 3.15 | Design token completeness | **Given** any v0.3 component is rendered, **When** spacing or color is needed, **Then** it uses tokens from DesignTokens.swift: `Spacing.xxs` (2pt), `Spacing.rowVertical` (6pt), `SemanticColors.sparkline` (.blue), `SemanticColors.brand` (.blue), `SemanticColors.brandSecondary` (.orange), `SemanticColors.recurring` (.indigo) |
 
 ### v0.4 (planned)
 
@@ -142,7 +141,7 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 | Scenario | Expected Behavior |
 |----------|------------------|
 | Account with zero transactions | Show account in list with balance; transaction tab shows empty state: "No transactions yet" |
-| Custom date filter: end date before start date | Prevent selection; if typed manually, swap dates and show corrected range |
+| Date range filter with no data in range | Show "No transactions match your filters" empty state; filter chips remain visible for adjustment |
 | Filter results in zero transactions | Show "No transactions match your filters" with a "Clear filters" button |
 | Recurring detection: merchant name varies slightly ("NETFLIX.COM" vs "Netflix") | Normalize merchant names using Plaid's `merchant_name` field (not `name`); group by normalized value |
 | Notification threshold set to $0 | Treat as "notify for every transaction"; show warning in settings: "You'll be notified for every transaction" |

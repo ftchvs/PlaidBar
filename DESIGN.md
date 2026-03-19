@@ -27,7 +27,7 @@ Visual design spec and component catalog for PlaidBar.
 |-------|-------|------|
 | 0-29% | Green | `checkmark.circle` |
 | 30-49% | Yellow | `exclamationmark.triangle` |
-| 50-74% | Orange | `exclamationmark.triangle` |
+| 50-74% | Orange | `exclamationmark.triangle.fill` |
 | 75%+ | Red | `xmark.octagon` |
 
 ### Data Palette (Charts)
@@ -352,7 +352,7 @@ These `SpendingCategory.colorHex` values have <3:1 contrast ratio against dark b
 
 - **Current behavior:** Hex colors render as-is on dark backgrounds. Most are vibrant enough to work, but some (e.g., light yellows) lose contrast.
 - **Recommended fix:** Add a `colorHexDark` property to `SpendingCategory` with adjusted values for dark backgrounds, selected via `@Environment(\.colorScheme)`.
-- **Interim:** Existing palette is acceptable. All chart segments maintain >3:1 contrast ratio against both `.background` and `.secondarySystemBackground` in dark mode.
+- **Interim:** Existing palette is acceptable for most categories. 5 categories (see Problem Colors above) fall below 3:1 contrast on dark backgrounds — a `colorHexDark` property is the recommended fix.
 
 ### Testing Checklist
 
