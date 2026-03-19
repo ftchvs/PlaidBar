@@ -55,6 +55,7 @@ final class AppState {
     }
     var refreshInterval: TimeInterval = PlaidBarConstants.backgroundRefreshInterval {
         didSet {
+            guard refreshInterval != oldValue else { return }
             UserDefaults.standard.set(refreshInterval, forKey: Keys.refreshInterval)
             // Restart background refresh with new interval
             if refreshTask != nil { startBackgroundRefresh() }
@@ -67,19 +68,34 @@ final class AppState {
         }
     }
     var largeTransactionThreshold: Double = 500.0 {
-        didSet { UserDefaults.standard.set(largeTransactionThreshold, forKey: Keys.largeTransactionThreshold) }
+        didSet {
+            guard largeTransactionThreshold != oldValue else { return }
+            UserDefaults.standard.set(largeTransactionThreshold, forKey: Keys.largeTransactionThreshold)
+        }
     }
     var lowBalanceThreshold: Double = 100.0 {
-        didSet { UserDefaults.standard.set(lowBalanceThreshold, forKey: Keys.lowBalanceThreshold) }
+        didSet {
+            guard lowBalanceThreshold != oldValue else { return }
+            UserDefaults.standard.set(lowBalanceThreshold, forKey: Keys.lowBalanceThreshold)
+        }
     }
     var notifyLargeTransaction: Bool = true {
-        didSet { UserDefaults.standard.set(notifyLargeTransaction, forKey: Keys.notifyLargeTransaction) }
+        didSet {
+            guard notifyLargeTransaction != oldValue else { return }
+            UserDefaults.standard.set(notifyLargeTransaction, forKey: Keys.notifyLargeTransaction)
+        }
     }
     var notifyLowBalance: Bool = true {
-        didSet { UserDefaults.standard.set(notifyLowBalance, forKey: Keys.notifyLowBalance) }
+        didSet {
+            guard notifyLowBalance != oldValue else { return }
+            UserDefaults.standard.set(notifyLowBalance, forKey: Keys.notifyLowBalance)
+        }
     }
     var notifyHighUtilization: Bool = true {
-        didSet { UserDefaults.standard.set(notifyHighUtilization, forKey: Keys.notifyHighUtilization) }
+        didSet {
+            guard notifyHighUtilization != oldValue else { return }
+            UserDefaults.standard.set(notifyHighUtilization, forKey: Keys.notifyHighUtilization)
+        }
     }
 
     var launchAtLogin: Bool = false {
