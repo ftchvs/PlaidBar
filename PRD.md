@@ -35,7 +35,7 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 - [x] Hover states, avatars, animations
 - [x] Setup/onboarding flow
 
-### v0.2 (current)
+### v0.2 (shipped)
 
 - [x] Design system (semantic colors, typography, spacing)
 - [x] Settings persistence (UserDefaults)
@@ -50,31 +50,53 @@ A menu bar app that makes personal finance data glanceable. One click to see all
 - [x] Accessibility improvements (secondary cues for color-only info)
 - [x] Fix: nonisolated(unsafe) formatter (Issue #5)
 
-### v0.3 (planned)
+### v0.3 (shipped)
 
 #### Recurring Transaction Detection
 
 | # | Requirement | Acceptance Criteria |
 |---|-------------|-------------------|
-| 3.1 | Identify recurring transactions | **Given** a user has 3+ transactions with the same merchant and similar amount (±10%) within 90 days, **When** the transaction list loads, **Then** those transactions are tagged with a "recurring" badge |
+| 3.1 | Identify recurring transactions | **Given** a user has 2+ transactions with the same merchant name, **When** RecurringDetector runs, **Then** transactions meeting confidence ≥ 0.3 are classified into one of 5 frequency bands (weekly, biweekly, monthly, quarterly, annual) based on median interval |
 | 3.2 | Recurring summary view | **Given** the user navigates to the recurring tab, **When** recurring transactions exist, **Then** a list shows: merchant name, frequency (weekly/monthly/yearly), average amount, and next expected date |
-| 3.3 | Recurring with no matches | **Given** the user has no recurring patterns detected, **When** they view the recurring tab, **Then** an empty state explains "No recurring transactions detected yet — we need at least 3 months of data" |
+| 3.3 | Recurring with no matches | **Given** the user has no recurring patterns detected, **When** they view the recurring tab, **Then** an empty state explains "Recurring charges will be detected automatically after syncing 2+ months of transactions." |
 
 #### Transaction Filtering
 
 | # | Requirement | Acceptance Criteria |
 |---|-------------|-------------------|
-| 3.4 | Filter by date range | **Given** the user is on the transaction list, **When** they select a date range (7d, 30d, 90d, custom), **Then** only transactions within that range appear and the count updates |
+| 3.4 | Filter by date range | **Given** the user is on the transaction list, **When** they select a date range from the DateRangeFilter enum — `.week` ("This Week"), `.month` ("This Month"), `.thirtyDays` ("30 Days"), `.all` ("All") — **Then** only transactions within that range appear and the count updates |
 | 3.5 | Filter by category | **Given** the user is on the transaction list, **When** they select one or more Plaid categories, **Then** only matching transactions appear |
-| 3.6 | Filter persistence | **Given** the user applies filters and closes the menu bar panel, **When** they reopen it, **Then** the filters remain applied until explicitly cleared |
+| 3.6 | Filter state lifecycle | **Given** the user applies filters (stored as @State on TransactionsView), **When** the menu bar popover closes and reopens, **Then** all filters reset to defaults (no category, no account, date = All) — by design, filters are ephemeral |
 
 #### Notifications
 
 | # | Requirement | Acceptance Criteria |
 |---|-------------|-------------------|
-| 3.7 | Large transaction alert | **Given** the user has enabled notifications in settings and set a threshold (default: $100), **When** a new transaction exceeds that threshold during sync, **Then** a macOS notification shows: merchant, amount, and account name |
-| 3.8 | Notification settings | **Given** the user opens Settings > Notifications, **When** they toggle notifications on/off and set a threshold amount, **Then** the preference persists across app restarts via UserDefaults |
-| 3.9 | Notification when app is backgrounded | **Given** the app is running in the menu bar (not focused), **When** a qualifying transaction is detected, **Then** the notification still fires via UNUserNotificationCenter |
+| 3.7 | Transaction & balance notifications | **Given** the user has enabled notifications in settings, **When** a sync completes, **Then** three trigger types fire: (1) large transaction above threshold (default: $500 via `largeTransactionThreshold`), (2) low balance below threshold (default: $100 via `lowBalanceThreshold`), (3) high credit utilization. Each macOS notification shows contextual details (merchant+amount, account+balance, or account+utilization) |
+| 3.8 | Settings window | **Given** the user opens Settings (⌘,), **When** the 480×380 window presents, **Then** it contains 4 tabs: General, Accounts, Notifications, and About. Notification tab allows toggling notifications on/off and setting thresholds; all preferences persist via UserDefaults |
+| 3.9 | Notification deduplication | **Given** a notification has already been sent for a transaction/condition, **When** subsequent syncs encounter the same item, **Then** the LRU dedup cache (500 entry cap, oldest evicted first) prevents duplicate alerts. Resolved conditions (e.g., balance rises above threshold) clear their dedup entries via `clearResolvedDedup()` |
+
+#### Transaction Detail & Navigation
+
+| # | Requirement | Acceptance Criteria |
+|---|-------------|-------------------|
+| 3.10 | Transaction detail sheet | **Given** user taps a transaction row, **When** the detail sheet presents, **Then** it shows: merchant name, raw transaction name, amount (color-coded), category with icon, date, account name, and status (posted/pending with colored dot). Dismiss via "Done" toolbar button |
+| 3.11 | Accessibility on new components | **Given** VoiceOver is enabled, **When** navigating recurring/filter/detail views, **Then** each component provides meaningful labels: FilterChipsView announces active filter count, RecurringRow announces merchant+frequency+amount, TransactionDetailView contains combined accessible elements |
+| 3.12 | Popover dismiss resets filters | **Given** the user has active filters, **When** the popover closes and reopens, **Then** all filter state (@State) is reset to defaults (no category, no account, date = All) |
+| 3.13 | Recent/Recurring toggle | **Given** user is on the Transactions tab, **When** they use the segmented picker, **Then** they can switch between "Recent" (filtered transaction list) and "Recurring" (recurring detection view) with animated transition |
+
+#### Spending Enhancements
+
+| # | Requirement | Acceptance Criteria |
+|---|-------------|-------------------|
+| 3.14 | Period-over-period comparison | **Given** spending data exists for current and previous period, **When** the user views the Spending tab, **Then** a comparison shows absolute delta, percentage change, and directional arrow (up = red/negative, down = green/positive). Color semantics: spending increase = negative (red), decrease = positive (green). Section hidden when previous period spending is zero |
+| 3.15 | Spending category color palette | **Given** chart data is rendered, **When** any SpendingCategory is displayed, **Then** it uses the fixed hex color from `SpendingCategory.colorHex` (17 categories). Full palette documented in DESIGN.md |
+
+#### Design System
+
+| # | Requirement | Acceptance Criteria |
+|---|-------------|-------------------|
+| 3.16 | Design token completeness | **Given** any v0.3 component is rendered, **When** spacing or color is needed, **Then** it uses tokens from DesignTokens.swift: `Spacing.xxs` (2pt), `Spacing.rowVertical` (6pt), `SemanticColors.sparkline` (.blue), `SemanticColors.brand` (.blue), `SemanticColors.brandSecondary` (.orange), `SemanticColors.recurring` (.indigo) |
 
 ### Future (not committed)
 
