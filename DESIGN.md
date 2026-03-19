@@ -16,6 +16,10 @@ Visual design spec and component catalog for PlaidBar.
 | `positive` | `.green` | Gains, good status |
 | `negative` | `.red` | Losses, high utilization |
 | `pending` | `.orange` | Pending transactions |
+| `sparkline` | `.blue` | Balance history sparkline stroke |
+| `brand` | `.blue` | App brand color (About view icon, accent) |
+| `brandSecondary` | `.orange` | Secondary brand color |
+| `recurring` | `.indigo` | Recurring transaction badge background |
 
 ### Utilization Gradient
 
@@ -28,7 +32,27 @@ Visual design spec and component catalog for PlaidBar.
 
 ### Data Palette (Charts)
 
-Category colors defined in `SpendingCategory.colorHex` — consistent hex values for chart segments. See `SpendingCategory.swift` for full list.
+Category colors from `SpendingCategory.colorHex` — fixed hex values for chart segments, legends, and category indicators.
+
+| Category | Display Name | Hex | SF Symbol | Notes |
+|----------|-------------|-----|-----------|-------|
+| `foodAndDrink` | Food & Drink | `#FF6B6B` | `fork.knife` | |
+| `transportation` | Transportation | `#4ECDC4` | `car.fill` | |
+| `shopping` | Shopping | `#45B7D1` | `bag.fill` | |
+| `entertainment` | Entertainment | `#96CEB4` | `tv.fill` | |
+| `personalCare` | Personal Care | `#FFEAA7` | `heart.fill` | Low dark-mode contrast — see Dark Mode |
+| `healthAndFitness` | Health & Fitness | `#DDA0DD` | `cross.case.fill` | |
+| `billsAndUtilities` | Bills & Utilities | `#98D8C8` | `bolt.fill` | |
+| `homeImprovement` | Home | `#F7DC6F` | `house.fill` | Low dark-mode contrast — see Dark Mode |
+| `travel` | Travel | `#BB8FCE` | `airplane` | |
+| `education` | Education | `#85C1E9` | `book.fill` | |
+| `subscriptions` | Subscriptions | `#F8C471` | `creditcard.fill` | Maps to LOAN_PAYMENTS |
+| `income` | Income | `#82E0AA` | `arrow.down.circle.fill` | |
+| `transfer` | Transfer In | `#AEB6BF` | `arrow.left.arrow.right` | |
+| `transferOut` | Transfer Out | `#D5DBDB` | `arrow.right.circle.fill` | Low dark-mode contrast |
+| `bankFees` | Bank Fees | `#E74C3C` | `banknote.fill` | |
+| `government` | Government | `#5DADE2` | `building.columns.fill` | |
+| `other` | Other | `#BDC3C7` | `questionmark.circle.fill` | Low dark-mode contrast |
 
 ## Typography Scale
 
@@ -41,6 +65,8 @@ Category colors defined in `SpendingCategory.colorHex` — consistent hex values
 | Body | system `.body` | default | Account names, transaction names |
 | Detail | `.detailText()` | `.caption` + `.secondary` | Masks, categories, dates |
 | Micro | `.microText()` | `.caption2.weight(.medium)` | Pending badge, percentages |
+
+> **Usage note:** `.callout.weight(.medium)` is used for the spending comparison delta text (SpendingView). Not part of the 5-level type scale but used consistently for secondary emphasis.
 
 ## Iconography
 
@@ -69,11 +95,13 @@ Category colors defined in `SpendingCategory.colorHex` — consistent hex values
 
 | Token | Value | Use |
 |-------|-------|-----|
+| `xxs` | 2pt | Minimal gaps (label-to-badge vertical) |
 | `xs` | 4pt | Tight gaps (icon-to-text) |
 | `sm` | 8pt | Standard padding, list item vertical |
 | `md` | 12pt | Section spacing, card padding |
 | `lg` | 16pt | Horizontal margins, major sections |
 | `xl` | 24pt | Hero spacing, modal padding |
+| `rowVertical` | 6pt | Row vertical padding (RecurringRow, TransactionRow) |
 
 ## Component Catalog
 
