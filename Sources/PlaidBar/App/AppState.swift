@@ -318,6 +318,10 @@ final class AppState {
             ),
         ]
 
+        let oneWeekAgo = Self.dateString(daysAgo: 8)
+        let twoWeeksAgo = Self.dateString(daysAgo: 15)
+        let threeWeeksAgo = Self.dateString(daysAgo: 22)
+
         transactions = [
             // Today
             TransactionDTO(id: "tx1", accountId: "demo_checking", amount: 67.42, date: today, name: "WHOLEFDS MKT 10234", merchantName: "Whole Foods", category: .foodAndDrink),
@@ -338,12 +342,25 @@ final class AppState {
             TransactionDTO(id: "tx13", accountId: "demo_checking", amount: -1_500.00, date: threeDaysAgo, name: "VENMO PAYMENT", merchantName: "Venmo", category: .income),
             TransactionDTO(id: "tx14", accountId: "demo_amex", amount: 55.00, date: threeDaysAgo, name: "TARGET 0392", merchantName: "Target", category: .shopping),
             TransactionDTO(id: "tx15", accountId: "demo_checking", amount: 1_850.00, date: threeDaysAgo, name: "RENT PAYMENT", merchantName: "Landlord", category: .billsAndUtilities),
+            // ~1 week ago (outside "This Week")
+            TransactionDTO(id: "tx16", accountId: "demo_checking", amount: 85.00, date: oneWeekAgo, name: "COSTCO WHOLESALE", merchantName: "Costco", category: .shopping),
+            TransactionDTO(id: "tx17", accountId: "demo_amex", amount: 220.00, date: oneWeekAgo, name: "AIRBNB", merchantName: "Airbnb", category: .travel),
+            TransactionDTO(id: "tx18", accountId: "demo_checking", amount: -2_800.00, date: oneWeekAgo, name: "DIRECT DEPOSIT", merchantName: "Employer", category: .income),
+            TransactionDTO(id: "tx19", accountId: "demo_visa", amount: 42.00, date: oneWeekAgo, name: "DOORDASH", merchantName: "DoorDash", category: .foodAndDrink),
+            // ~2 weeks ago
+            TransactionDTO(id: "tx20", accountId: "demo_checking", amount: 130.00, date: twoWeeksAgo, name: "CON EDISON", merchantName: "Con Edison", category: .billsAndUtilities),
+            TransactionDTO(id: "tx21", accountId: "demo_amex", amount: 64.99, date: twoWeeksAgo, name: "ADOBE CREATIVE", merchantName: "Adobe", category: .entertainment),
+            TransactionDTO(id: "tx22", accountId: "demo_checking", amount: 95.00, date: twoWeeksAgo, name: "CVS PHARMACY", merchantName: "CVS", category: .healthAndFitness),
+            // ~3 weeks ago
+            TransactionDTO(id: "tx23", accountId: "demo_visa", amount: 175.00, date: threeWeeksAgo, name: "NORDSTROM", merchantName: "Nordstrom", category: .shopping),
+            TransactionDTO(id: "tx24", accountId: "demo_checking", amount: 48.00, date: threeWeeksAgo, name: "LYFT RIDE", merchantName: "Lyft", category: .transportation),
+            TransactionDTO(id: "tx25", accountId: "demo_amex", amount: 35.00, date: threeWeeksAgo, name: "HULU", merchantName: "Hulu", category: .entertainment),
         ]
 
-        // Generate demo balance history (7 days)
-        balanceHistory = (0..<7).reversed().map { daysAgo in
+        // Generate demo balance history (30 days for richer sparkline)
+        balanceHistory = (0..<30).reversed().map { daysAgo in
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date())!
-            let jitter = Double.random(in: -500...500)
+            let jitter = Double.random(in: -800...800)
             return BalanceSnapshot(date: date, balance: 17_604.24 + jitter)
         }
 

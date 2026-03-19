@@ -19,7 +19,7 @@ struct SpendingView: View {
         case incomeExpense = "In vs Out"
     }
 
-    private var filteredSpending: [(SpendingCategory, Double)] {
+    private var periodStartString: String {
         let calendar = Calendar.current
         let now = Date()
 
@@ -32,11 +32,17 @@ struct SpendingView: View {
         case .last30Days:
             startDate = calendar.date(byAdding: .day, value: -30, to: now) ?? now
         }
+        return Self.formatDate(startDate)
+    }
 
-        let startString = Self.formatDate(startDate)
-        let filtered = appState.transactions.filter {
-            !$0.isIncome && $0.date >= startString &&
-            $0.category != .transfer && $0.category != .transferOut
+    private var filteredTransactions: [TransactionDTO] {
+        let startString = periodStartString
+        return appState.transactions.filter { $0.date >= startString }
+    }
+
+    private var filteredSpending: [(SpendingCategory, Double)] {
+        let filtered = filteredTransactions.filter {
+            !$0.isIncome && $0.category != .transfer && $0.category != .transferOut
         }
 
         let grouped = Dictionary(grouping: filtered) { $0.category ?? .other }
@@ -94,9 +100,9 @@ struct SpendingView: View {
             case .donut:
                 donutChart(categories: categories, total: total)
             case .trend:
-                SpendingTrendChart(transactions: appState.transactions)
+                SpendingTrendChart(transactions: filteredTransactions)
             case .incomeExpense:
-                IncomeExpenseChart(transactions: appState.transactions)
+                IncomeExpenseChart(transactions: filteredTransactions)
             }
         }
         .padding(.bottom, Spacing.sm)
