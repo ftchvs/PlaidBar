@@ -1,7 +1,7 @@
 import Foundation
 
 public struct RecurringTransaction: Sendable, Identifiable, Hashable {
-    public var id: String { merchantName }
+    public let id: String
     public let merchantName: String
     public let frequency: RecurringFrequency
     public let averageAmount: Double
@@ -21,6 +21,7 @@ public struct RecurringTransaction: Sendable, Identifiable, Hashable {
         transactionCount: Int,
         confidence: Double
     ) {
+        self.id = "\(merchantName)-\(frequency.rawValue)"
         self.merchantName = merchantName
         self.frequency = frequency
         self.averageAmount = averageAmount
@@ -66,6 +67,17 @@ public enum RecurringFrequency: String, Sendable, CaseIterable, Hashable {
         case .monthly: 30
         case .quarterly: 90
         case .annual: 365
+        }
+    }
+
+    /// Multiplier to normalize any frequency to a monthly equivalent cost
+    public var monthlyMultiplier: Double {
+        switch self {
+        case .weekly: 52.0 / 12.0
+        case .biweekly: 26.0 / 12.0
+        case .monthly: 1.0
+        case .quarterly: 1.0 / 3.0
+        case .annual: 1.0 / 12.0
         }
     }
 }

@@ -6,9 +6,32 @@ import PlaidBarCore
 final class NotificationService {
     static let shared = NotificationService()
 
-    private var notifiedTransactionIds: Set<String> = []
+    private static let notifiedTxKey = "notifiedTransactionIds"
+    private static let notifiedAccountKey = "notifiedAccountIds"
 
-    private init() {}
+    private var notifiedTransactionIds: Set<String>
+    private var notifiedAccountIds: Set<String>
+
+    private init() {
+        // Restore persisted dedup sets
+        let defaults = UserDefaults.standard
+        if let txIds = defaults.stringArray(forKey: Self.notifiedTxKey) {
+            notifiedTransactionIds = Set(txIds)
+        } else {
+            notifiedTransactionIds = []
+        }
+        if let acctIds = defaults.stringArray(forKey: Self.notifiedAccountKey) {
+            notifiedAccountIds = Set(acctIds)
+        } else {
+            notifiedAccountIds = []
+        }
+    }
+
+    private func persistNotifiedIds() {
+        let defaults = UserDefaults.standard
+        defaults.set(Array(notifiedTransactionIds), forKey: Self.notifiedTxKey)
+        defaults.set(Array(notifiedAccountIds), forKey: Self.notifiedAccountKey)
+    }
 
     // MARK: - Permissions
 
@@ -57,6 +80,14 @@ final class NotificationService {
                 threshold: creditUtilizationThreshold
             )
         }
+
+        persistNotifiedIds()
+    }
+
+    /// Clear dedup for an account when its condition resolves (balance recovers, utilization drops)
+    func clearAccountNotification(for accountId: String) {
+        notifiedAccountIds.remove(accountId)
+        persistNotifiedIds()
     }
 
     private func checkLargeTransactions(transactions: [TransactionDTO], threshold: Double) async {
@@ -72,6 +103,11 @@ final class NotificationService {
                 identifier: "large-tx-\(tx.id)"
             )
         }
+
+        // Cap stored IDs to last 500 to prevent unbounded growth
+        if notifiedTransactionIds.count > 500 {
+            notifiedTransactionIds = Set(notifiedTransactionIds.suffix(500))
+        }
     }
 
     private func checkLowBalance(accounts: [AccountDTO], threshold: Double) async {
@@ -79,7 +115,17 @@ final class NotificationService {
             $0.type == .depository && $0.balances.effectiveBalance < threshold
         }
 
+        // Clear dedup for accounts that recovered
+        let lowIds = Set(lowAccounts.map(\.id))
+        let depositoryIds = Set(accounts.filter { $0.type == .depository }.map(\.id))
+        for id in depositoryIds where !lowIds.contains(id) {
+            notifiedAccountIds.remove("low-\(id)")
+        }
+
         for account in lowAccounts {
+            let key = "low-\(account.id)"
+            guard !notifiedAccountIds.contains(key) else { continue }
+            notifiedAccountIds.insert(key)
             await sendNotification(
                 title: "Low Balance",
                 body: "\(account.name): \(Formatters.currency(account.balances.effectiveBalance, format: .full))",
@@ -93,7 +139,17 @@ final class NotificationService {
             $0.type == .credit && ($0.balances.utilizationPercent ?? 0) > threshold
         }
 
+        // Clear dedup for accounts that dropped below threshold
+        let highIds = Set(highUtil.map(\.id))
+        let creditIds = Set(accounts.filter { $0.type == .credit }.map(\.id))
+        for id in creditIds where !highIds.contains(id) {
+            notifiedAccountIds.remove("util-\(id)")
+        }
+
         for account in highUtil {
+            let key = "util-\(account.id)"
+            guard !notifiedAccountIds.contains(key) else { continue }
+            notifiedAccountIds.insert(key)
             let util = account.balances.utilizationPercent ?? 0
             await sendNotification(
                 title: "High Credit Utilization",

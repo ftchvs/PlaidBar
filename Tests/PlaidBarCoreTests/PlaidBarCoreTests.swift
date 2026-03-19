@@ -367,7 +367,7 @@ struct PlaidBarCoreTests {
             transactionCount: 3,
             confidence: 0.95
         )
-        #expect(r.id == "Netflix")
+        #expect(r.id == "Netflix-monthly")
     }
 
     @Test("RecurringFrequency display names")
@@ -386,6 +386,14 @@ struct PlaidBarCoreTests {
         #expect(RecurringFrequency.monthly.estimatedDays == 30)
         #expect(RecurringFrequency.quarterly.estimatedDays == 90)
         #expect(RecurringFrequency.annual.estimatedDays == 365)
+    }
+
+    @Test("RecurringFrequency monthly multiplier normalization")
+    func recurringFrequencyMultiplier() {
+        #expect(RecurringFrequency.monthly.monthlyMultiplier == 1.0)
+        #expect(abs(RecurringFrequency.weekly.monthlyMultiplier - 4.333) < 0.01)
+        #expect(abs(RecurringFrequency.quarterly.monthlyMultiplier - 0.333) < 0.01)
+        #expect(abs(RecurringFrequency.annual.monthlyMultiplier - 0.0833) < 0.01)
     }
 
     // MARK: - RecurringDetector Tests

@@ -6,7 +6,7 @@ struct RecurringView: View {
 
     var body: some View {
         let recurring = appState.recurringTransactions
-        let monthlyTotal = appState.monthlyRecurringTotal
+        let monthlyEstimate = appState.estimatedMonthlyRecurring
 
         VStack(alignment: .leading, spacing: 0) {
             if recurring.isEmpty {
@@ -17,20 +17,20 @@ struct RecurringView: View {
                 }
                 .padding()
             } else {
-                // Monthly total header
+                // Estimated monthly total header (normalizes weekly/annual to monthly equivalent)
                 HStack {
-                    Text("MONTHLY RECURRING")
+                    Text("EST. MONTHLY COST")
                         .sectionTitle()
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(Formatters.currency(monthlyTotal, format: .full))
+                    Text(Formatters.currency(monthlyEstimate, format: .full))
                         .heroBalance()
                 }
                 .padding(.horizontal, Spacing.lg)
                 .padding(.top, Spacing.md)
                 .padding(.bottom, Spacing.sm)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Monthly recurring: \(Formatters.currency(monthlyTotal, format: .full))")
+                .accessibilityLabel("Estimated monthly recurring cost: \(Formatters.currency(monthlyEstimate, format: .full))")
 
                 Divider()
 

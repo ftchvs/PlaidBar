@@ -443,20 +443,21 @@ struct PlaidBarTests {
         #expect(highUtil[0].id == "2")
     }
 
-    // MARK: - Recurring Monthly Total
+    // MARK: - Estimated Monthly Recurring Total
 
-    @Test("Monthly recurring total calculation")
-    func monthlyRecurringTotal() {
+    @Test("Estimated monthly recurring normalizes all frequencies")
+    func estimatedMonthlyRecurring() {
         let recurring = [
             RecurringTransaction(merchantName: "Netflix", frequency: .monthly, averageAmount: 15.99, lastDate: "2026-03-15", nextExpectedDate: "2026-04-15", category: .entertainment, transactionCount: 3, confidence: 0.95),
             RecurringTransaction(merchantName: "Gym", frequency: .monthly, averageAmount: 75.00, lastDate: "2026-03-15", nextExpectedDate: "2026-04-15", category: .healthAndFitness, transactionCount: 3, confidence: 0.90),
             RecurringTransaction(merchantName: "Weekly Sub", frequency: .weekly, averageAmount: 5.00, lastDate: "2026-03-15", nextExpectedDate: "2026-03-22", category: .entertainment, transactionCount: 5, confidence: 0.85),
         ]
 
-        let monthlyTotal = recurring
-            .filter { $0.frequency == .monthly }
-            .reduce(0) { $0 + $1.averageAmount }
+        // Monthly: 15.99 + 75.00 = 90.99
+        // Weekly $5 * (52/12) = ~$21.67
+        // Total ≈ $112.66
+        let estimated = recurring.reduce(0) { $0 + $1.averageAmount * $1.frequency.monthlyMultiplier }
 
-        #expect(abs(monthlyTotal - 90.99) < 0.01)
+        #expect(abs(estimated - 112.66) < 0.01)
     }
 }

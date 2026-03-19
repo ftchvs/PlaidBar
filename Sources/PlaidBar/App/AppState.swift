@@ -193,14 +193,24 @@ final class AppState {
         spendingByCategory.reduce(0) { $0 + $1.1 }
     }
 
+    /// Cached recurring detection — recomputed only when transactions change
+    private var _cachedRecurringTransactions: [RecurringTransaction]?
+    private var _cachedRecurringTransactionCount: Int = -1
+
     var recurringTransactions: [RecurringTransaction] {
-        RecurringDetector.detect(from: transactions)
+        if transactions.count == _cachedRecurringTransactionCount,
+           let cached = _cachedRecurringTransactions {
+            return cached
+        }
+        let result = RecurringDetector.detect(from: transactions)
+        _cachedRecurringTransactions = result
+        _cachedRecurringTransactionCount = transactions.count
+        return result
     }
 
-    var monthlyRecurringTotal: Double {
-        recurringTransactions
-            .filter { $0.frequency == .monthly }
-            .reduce(0) { $0 + $1.averageAmount }
+    /// Monthly equivalent of all recurring charges (normalizes weekly/annual to monthly)
+    var estimatedMonthlyRecurring: Double {
+        recurringTransactions.reduce(0) { $0 + $1.averageAmount * $1.frequency.monthlyMultiplier }
     }
 
     func transactionsForAccount(_ accountId: String) -> [TransactionDTO] {
@@ -336,6 +346,14 @@ final class AppState {
     }
 
     func loadInitialData() async {
+        // Recheck notification permission at startup (user may have revoked in System Settings)
+        if notificationsEnabled {
+            let status = await NotificationService.shared.checkPermissionStatus()
+            if status == .denied || status == .notDetermined {
+                notificationsEnabled = false
+            }
+        }
+
         if CommandLine.arguments.contains("--demo") {
             loadDemoData()
             // Allow --tab flag to set initial tab for screenshots
