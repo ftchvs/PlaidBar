@@ -25,7 +25,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 450, height: 300)
+        .frame(width: 480, height: 300)
     }
 }
 
@@ -53,7 +53,7 @@ struct GeneralSettingsView: View {
             }
 
             HStack {
-                Text("Credit warning threshold")
+                Text("Credit warning")
                 Spacer()
                 TextField(
                     "",
@@ -64,6 +64,7 @@ struct GeneralSettingsView: View {
                 .textFieldStyle(.roundedBorder)
                 Text("%")
             }
+            .help("Credit cards above this utilization threshold show warning colors")
 
             Toggle("Launch at login", isOn: $state.launchAtLogin)
         }
