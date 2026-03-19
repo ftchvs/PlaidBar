@@ -148,7 +148,7 @@ struct TransactionsView: View {
         } else {
             ForEach(filteredTransactions, id: \.0) { date, transactions in
                 // Date header
-                Text(Self.formatDateHeader(date))
+                Text(Formatters.displayTransactionDate(date))
                     .sectionTitle()
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -167,12 +167,6 @@ struct TransactionsView: View {
         }
     }
 
-    private static func formatDateHeader(_ dateString: String) -> String {
-        guard let date = Formatters.parseTransactionDate(dateString) else {
-            return dateString
-        }
-        return Formatters.displayDate(date)
-    }
 }
 
 struct TransactionRow: View {

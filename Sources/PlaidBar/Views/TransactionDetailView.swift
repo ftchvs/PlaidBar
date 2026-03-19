@@ -47,7 +47,7 @@ struct TransactionDetailView: View {
                     }
 
                     LabeledContent("Date") {
-                        Text(formattedDate)
+                        Text(Formatters.displayTransactionDate(transaction.date))
                     }
 
                     LabeledContent("Account") {
@@ -87,10 +87,4 @@ struct TransactionDetailView: View {
         transaction.isIncome ? SemanticColors.income : SemanticColors.expense
     }
 
-    private var formattedDate: String {
-        guard let date = Formatters.parseTransactionDate(transaction.date) else {
-            return transaction.date
-        }
-        return Formatters.displayDate(date)
-    }
 }

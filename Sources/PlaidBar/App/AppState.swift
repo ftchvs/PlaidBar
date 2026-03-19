@@ -22,7 +22,9 @@ final class AppState {
 
     // MARK: - State
     var accounts: [AccountDTO] = []
-    var transactions: [TransactionDTO] = []
+    var transactions: [TransactionDTO] = [] {
+        didSet { _cachedRecurringTransactions = nil }
+    }
     var isLoading = false
     var error: String?
     var isPopoverPresented = false
@@ -193,18 +195,13 @@ final class AppState {
         spendingByCategory.reduce(0) { $0 + $1.1 }
     }
 
-    /// Cached recurring detection — recomputed only when transactions change
+    /// Cached recurring detection — invalidated via transactions.didSet
     private var _cachedRecurringTransactions: [RecurringTransaction]?
-    private var _cachedRecurringTransactionCount: Int = -1
 
     var recurringTransactions: [RecurringTransaction] {
-        if transactions.count == _cachedRecurringTransactionCount,
-           let cached = _cachedRecurringTransactions {
-            return cached
-        }
+        if let cached = _cachedRecurringTransactions { return cached }
         let result = RecurringDetector.detect(from: transactions)
         _cachedRecurringTransactions = result
-        _cachedRecurringTransactionCount = transactions.count
         return result
     }
 
@@ -325,18 +322,18 @@ final class AppState {
 
     private func evaluateNotifications() async {
         guard notificationsEnabled else { return }
-        let triggers = NotificationTriggers(
+        let config = NotificationTriggers(
             largeTransaction: notifyLargeTransaction,
             lowBalance: notifyLowBalance,
-            highUtilization: notifyHighUtilization
+            highUtilization: notifyHighUtilization,
+            largeTransactionThreshold: largeTransactionThreshold,
+            lowBalanceThreshold: lowBalanceThreshold,
+            creditUtilizationThreshold: creditUtilizationThreshold
         )
         await NotificationService.shared.evaluateTriggers(
             transactions: transactions,
             accounts: accounts,
-            largeTransactionThreshold: largeTransactionThreshold,
-            lowBalanceThreshold: lowBalanceThreshold,
-            creditUtilizationThreshold: creditUtilizationThreshold,
-            triggers: triggers
+            config: config
         )
     }
 

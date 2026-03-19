@@ -19,24 +19,30 @@ struct SpendingView: View {
         case incomeExpense = "In vs Out"
     }
 
-    private var periodStartString: String {
+    /// Returns (currentPeriodStart, previousPeriodStart) as formatted date strings.
+    /// Computed once per render — both `filteredTransactions` and `previousPeriodSpending` use this.
+    private var periodInterval: (current: String, previous: String) {
         let calendar = Calendar.current
         let now = Date()
 
         let startDate: Date
+        let previousStart: Date
         switch selectedPeriod {
         case .thisWeek:
             startDate = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+            previousStart = calendar.date(byAdding: .weekOfYear, value: -1, to: startDate) ?? now
         case .thisMonth:
             startDate = calendar.dateInterval(of: .month, for: now)?.start ?? now
+            previousStart = calendar.date(byAdding: .month, value: -1, to: startDate) ?? now
         case .last30Days:
             startDate = calendar.date(byAdding: .day, value: -30, to: now) ?? now
+            previousStart = calendar.date(byAdding: .day, value: -30, to: startDate) ?? now
         }
-        return Self.formatDate(startDate)
+        return (Self.formatDate(startDate), Self.formatDate(previousStart))
     }
 
     private var filteredTransactions: [TransactionDTO] {
-        let startString = periodStartString
+        let startString = periodInterval.current
         return appState.transactions.filter { $0.date >= startString }
     }
 
@@ -65,31 +71,10 @@ struct SpendingView: View {
 
     // MARK: - Month-over-Month Comparison
 
-    private var previousPeriodStartString: String {
-        let calendar = Calendar.current
-        let now = Date()
-
-        let startDate: Date
-        let previousStart: Date
-        switch selectedPeriod {
-        case .thisWeek:
-            startDate = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-            previousStart = calendar.date(byAdding: .weekOfYear, value: -1, to: startDate) ?? now
-        case .thisMonth:
-            startDate = calendar.dateInterval(of: .month, for: now)?.start ?? now
-            previousStart = calendar.date(byAdding: .month, value: -1, to: startDate) ?? now
-        case .last30Days:
-            startDate = calendar.date(byAdding: .day, value: -30, to: now) ?? now
-            previousStart = calendar.date(byAdding: .day, value: -30, to: startDate) ?? now
-        }
-        return Self.formatDate(previousStart)
-    }
-
     private var previousPeriodSpending: Double {
-        let prevStart = previousPeriodStartString
-        let currentStart = periodStartString
+        let interval = periodInterval
         let filtered = appState.transactions.filter {
-            $0.date >= prevStart && $0.date < currentStart &&
+            $0.date >= interval.previous && $0.date < interval.current &&
             !$0.isIncome && $0.category != .transfer && $0.category != .transferOut
         }
         return filtered.reduce(0) { $0 + $1.displayAmount }

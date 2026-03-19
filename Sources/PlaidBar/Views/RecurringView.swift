@@ -72,7 +72,7 @@ private struct RecurringRow: View {
                         .monospacedDigit()
                 }
 
-                Text("Last: \(formattedDate)")
+                Text("Last: \(Formatters.displayTransactionDate(item.lastDate))")
                     .detailText()
             }
 
@@ -83,12 +83,5 @@ private struct RecurringRow: View {
         .hoverHighlight()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.merchantName), \(item.frequency.displayName), \(Formatters.currency(item.averageAmount, format: .full))")
-    }
-
-    private var formattedDate: String {
-        guard let date = Formatters.parseTransactionDate(item.lastDate) else {
-            return item.lastDate
-        }
-        return Formatters.displayDate(date)
     }
 }
