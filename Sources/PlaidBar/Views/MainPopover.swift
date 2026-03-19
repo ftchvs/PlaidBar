@@ -14,7 +14,7 @@ struct MainPopover: View {
                 SetupView()
             } else {
                 // Header — balance as hero with sparkline
-                VStack(spacing: 2) {
+                VStack(spacing: Spacing.xxs) {
                     Text(Formatters.currency(appState.netBalance, format: .full))
                         .heroBalance()
                         .contentTransition(.numericText())
@@ -28,7 +28,7 @@ struct MainPopover: View {
                             .padding(.top, Spacing.xs)
                     }
 
-                    HStack(spacing: 6) {
+                    HStack(spacing: Spacing.rowVertical) {
                         Text("PlaidBar")
                             .detailText()
                         if let syncText = appState.lastSyncRelative {
@@ -143,7 +143,7 @@ struct MainPopover: View {
                     .buttonStyle(.borderless)
                 }
                 .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, 6)
+                .padding(.vertical, Spacing.rowVertical)
                 .background(.red.opacity(0.1))
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }

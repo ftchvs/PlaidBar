@@ -132,7 +132,7 @@ struct SpendingView: View {
                         .frame(width: 35, alignment: .trailing)
                 }
                 .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, 2)
+                .padding(.vertical, Spacing.xxs)
             }
         }
 

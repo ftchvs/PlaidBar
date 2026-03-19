@@ -39,8 +39,8 @@ struct TransactionsView: View {
                     .buttonStyle(.borderless)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
             .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
             .padding(.horizontal, Spacing.lg)
             .padding(.vertical, Spacing.sm)
@@ -67,7 +67,7 @@ struct TransactionsView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, Spacing.lg)
-                        .padding(.top, 10)
+                        .padding(.top, Spacing.md)
                         .padding(.bottom, Spacing.xs)
                         .background(.quaternary.opacity(0.3))
 
@@ -91,7 +91,7 @@ struct TransactionRow: View {
     let transaction: TransactionDTO
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Spacing.md) {
             // Category icon
             Image(systemName: (transaction.category ?? .other).iconName)
                 .font(.body)
@@ -99,7 +99,7 @@ struct TransactionRow: View {
                 .frame(width: 24)
 
             // Name and category
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(transaction.displayName)
                     .font(.body)
                     .lineLimit(1)
