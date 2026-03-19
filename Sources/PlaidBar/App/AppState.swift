@@ -112,11 +112,13 @@ final class AppState {
 
     // MARK: - Services
     private let serverClient = ServerClient()
+    private let notificationService: any NotificationServiceProtocol
     private var refreshTask: Task<Void, Never>?
 
     // MARK: - Init
 
-    init() {
+    init(notificationService: any NotificationServiceProtocol = NotificationService.shared) {
+        self.notificationService = notificationService
         loadSettings()
     }
 
@@ -355,11 +357,15 @@ final class AppState {
             lowBalanceThreshold: lowBalanceThreshold,
             creditUtilizationThreshold: creditUtilizationThreshold
         )
-        await NotificationService.shared.evaluateTriggers(
+        await notificationService.evaluateTriggers(
             transactions: transactions,
             accounts: accounts,
             config: config
         )
+    }
+
+    func requestNotificationPermission() async -> Bool {
+        await notificationService.requestPermission()
     }
 
     func stopBackgroundRefresh() {
@@ -370,7 +376,7 @@ final class AppState {
     func loadInitialData() async {
         // Recheck notification permission at startup (user may have revoked in System Settings)
         if notificationsEnabled {
-            let status = await NotificationService.shared.checkPermissionStatus()
+            let status = await notificationService.checkPermissionStatus()
             if status == .denied || status == .notDetermined {
                 notificationsEnabled = false
             }
