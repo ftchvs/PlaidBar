@@ -12,6 +12,12 @@ final class AppState {
         static let creditUtilizationThreshold = "creditUtilizationThreshold"
         static let refreshInterval = "refreshInterval"
         static let balanceHistory = "balanceHistory"
+        static let notificationsEnabled = "notificationsEnabled"
+        static let largeTransactionThreshold = "largeTransactionThreshold"
+        static let lowBalanceThreshold = "lowBalanceThreshold"
+        static let notifyLargeTransaction = "notifyLargeTransaction"
+        static let notifyLowBalance = "notifyLowBalance"
+        static let notifyHighUtilization = "notifyHighUtilization"
     }
 
     // MARK: - State
@@ -43,6 +49,28 @@ final class AppState {
             if refreshTask != nil { startBackgroundRefresh() }
         }
     }
+    var notificationsEnabled: Bool = false {
+        didSet {
+            guard notificationsEnabled != oldValue else { return }
+            UserDefaults.standard.set(notificationsEnabled, forKey: Keys.notificationsEnabled)
+        }
+    }
+    var largeTransactionThreshold: Double = 500.0 {
+        didSet { UserDefaults.standard.set(largeTransactionThreshold, forKey: Keys.largeTransactionThreshold) }
+    }
+    var lowBalanceThreshold: Double = 100.0 {
+        didSet { UserDefaults.standard.set(lowBalanceThreshold, forKey: Keys.lowBalanceThreshold) }
+    }
+    var notifyLargeTransaction: Bool = true {
+        didSet { UserDefaults.standard.set(notifyLargeTransaction, forKey: Keys.notifyLargeTransaction) }
+    }
+    var notifyLowBalance: Bool = true {
+        didSet { UserDefaults.standard.set(notifyLowBalance, forKey: Keys.notifyLowBalance) }
+    }
+    var notifyHighUtilization: Bool = true {
+        didSet { UserDefaults.standard.set(notifyHighUtilization, forKey: Keys.notifyHighUtilization) }
+    }
+
     var launchAtLogin: Bool = false {
         didSet {
             guard launchAtLogin != oldValue else { return }
@@ -79,6 +107,25 @@ final class AppState {
         }
         if defaults.object(forKey: Keys.refreshInterval) != nil {
             refreshInterval = defaults.double(forKey: Keys.refreshInterval)
+        }
+        // Notification settings
+        if defaults.object(forKey: Keys.notificationsEnabled) != nil {
+            notificationsEnabled = defaults.bool(forKey: Keys.notificationsEnabled)
+        }
+        if defaults.object(forKey: Keys.largeTransactionThreshold) != nil {
+            largeTransactionThreshold = defaults.double(forKey: Keys.largeTransactionThreshold)
+        }
+        if defaults.object(forKey: Keys.lowBalanceThreshold) != nil {
+            lowBalanceThreshold = defaults.double(forKey: Keys.lowBalanceThreshold)
+        }
+        if defaults.object(forKey: Keys.notifyLargeTransaction) != nil {
+            notifyLargeTransaction = defaults.bool(forKey: Keys.notifyLargeTransaction)
+        }
+        if defaults.object(forKey: Keys.notifyLowBalance) != nil {
+            notifyLowBalance = defaults.bool(forKey: Keys.notifyLowBalance)
+        }
+        if defaults.object(forKey: Keys.notifyHighUtilization) != nil {
+            notifyHighUtilization = defaults.bool(forKey: Keys.notifyHighUtilization)
         }
         // Balance history
         if let data = defaults.data(forKey: Keys.balanceHistory),
@@ -144,6 +191,26 @@ final class AppState {
 
     var totalSpending: Double {
         spendingByCategory.reduce(0) { $0 + $1.1 }
+    }
+
+    var recurringTransactions: [RecurringTransaction] {
+        RecurringDetector.detect(from: transactions)
+    }
+
+    var monthlyRecurringTotal: Double {
+        recurringTransactions
+            .filter { $0.frequency == .monthly }
+            .reduce(0) { $0 + $1.averageAmount }
+    }
+
+    func transactionsForAccount(_ accountId: String) -> [TransactionDTO] {
+        transactions.filter { $0.accountId == accountId }
+            .sorted { $0.date > $1.date }
+    }
+
+    func transactionsForMerchant(_ merchantName: String, excluding transactionId: String) -> [TransactionDTO] {
+        transactions.filter { $0.merchantName == merchantName && $0.id != transactionId }
+            .sorted { $0.date > $1.date }
     }
 
     // MARK: - Actions
@@ -240,9 +307,27 @@ final class AppState {
             while !Task.isCancelled {
                 await refreshAccounts()
                 await syncTransactions()
+                await evaluateNotifications()
                 try? await Task.sleep(for: .seconds(refreshInterval))
             }
         }
+    }
+
+    private func evaluateNotifications() async {
+        guard notificationsEnabled else { return }
+        let triggers = NotificationTriggers(
+            largeTransaction: notifyLargeTransaction,
+            lowBalance: notifyLowBalance,
+            highUtilization: notifyHighUtilization
+        )
+        await NotificationService.shared.evaluateTriggers(
+            transactions: transactions,
+            accounts: accounts,
+            largeTransactionThreshold: largeTransactionThreshold,
+            lowBalanceThreshold: lowBalanceThreshold,
+            creditUtilizationThreshold: creditUtilizationThreshold,
+            triggers: triggers
+        )
     }
 
     func stopBackgroundRefresh() {
