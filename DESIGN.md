@@ -138,9 +138,9 @@ Category colors from `SpendingCategory.colorHex` — fixed hex values for chart 
 |-------|----------|
 | Default (posted) | Full-opacity; amount in `income`/`expense` color |
 | Pending | `.opacity(0.7)` on row; orange "Pending" `.microText()` badge below amount |
-| Recurring (v0.3) | Small `repeat` icon badge on category icon; tappable for recurring detail |
 | Filtered out | Hidden (`.transition(.opacity)`) when filter excludes |
 | Tap/hover | `.background(.quaternarySystemFill)` on row |
+| Tap → detail sheet | `onTapGesture` sets `selectedTransaction`, presenting `TransactionDetailView` as `.sheet` |
 
 ### TransactionDetailView
 
@@ -255,10 +255,10 @@ Pattern for all empty states:
 |--------|----------------|-------------|
 | Menu bar popover (main) | TabView with 4 tabs: Accounts, Transactions, Spending, Credit | `Cmd+1` through `Cmd+4` |
 | Accounts tab | AccountRow list grouped by `.depository` / `.credit` | Scroll; pull-to-refresh via `Cmd+R` |
-| Transactions tab | TransactionRow list + date group headers + filter bar (v0.3) | Scroll; search via `Cmd+F` |
-| Spending tab | Donut chart + Trend line + Income vs Expense | Scroll; chart tap for detail |
+| Transactions tab | Segmented picker (Recent/Recurring) + Search bar + FilterChipsView + TransactionRow list + date group headers → tap: TransactionDetailView sheet; OR RecurringView | Scroll; search via `Cmd+F` |
+| Spending tab | Period picker (segmented) + Hero total + SpendingComparison + Chart picker (Categories/Trend/In vs Out) + Donut/SpendingTrendChart/IncomeExpenseChart | Scroll; period and chart type selectable |
 | Credit tab | CreditCardRow list + Utilization gauge | Scroll |
-| Settings | Standard macOS Settings-style panes (General, Notifications v0.3) | TabView |
+| Settings | 4-tab TabView: General, Accounts, Notifications, About (480×380) | TabView |
 | Onboarding | 3-step flow: Welcome → Plaid Link → Success | Next/Back buttons |
 
 ## Extending the Design System
@@ -289,6 +289,31 @@ Checklist for contributors:
 3. Define `icon` — use filled SF Symbol consistent with existing category icons
 4. Optionally add `colorHexDark` if the light-mode hex has <3:1 contrast on dark backgrounds
 
+### Adding a Filter Chip
+
+1. Add a new `@State` property to `TransactionsView` for the filter value
+2. Add a `@Binding` parameter to `FilterChipsView`
+3. Add a new `Menu` block in `FilterChipsView.body` following the chip pattern (Menu > Button items > chipLabel)
+4. Update `activeFilterCount` computed property to include the new filter
+5. Add filtering logic in `TransactionsView.filteredTransactions`
+6. Add clear logic in the "Clear all" button action
+
+### Adding a Frequency Badge
+
+1. Add a new case to `RecurringFrequency` enum in `RecurringTransaction.swift`
+2. Provide `displayName`, `iconName`, `estimatedDays`, and `monthlyMultiplier`
+3. Add the median interval range in `RecurringDetector.classifyFrequency`
+4. Badge rendering in `RecurringRow` is automatic (uses `frequency.displayName`)
+
+### Adding a Detail Sheet
+
+1. Add a new `@State` property of optional type for the item to detail
+2. Attach `.sheet(item:)` modifier to the parent view
+3. Build the detail view following `TransactionDetailView` pattern: `NavigationStack` > `Form` > sections with `LabeledContent`
+4. Add a "Done" toolbar button calling `dismiss()`
+5. Apply `.presentationSizing(.fitted)` for content-appropriate sheet size
+6. Add `.accessibilityElement(children: .contain)` to the root
+
 ## Dark Mode
 
 PlaidBar runs on macOS, where dark mode usage is ~60%. All tokens must work in both appearances.
@@ -304,6 +329,22 @@ PlaidBar runs on macOS, where dark mode usage is ~60%. All tokens must work in b
 | `pending` (`.orange`) | System orange | System orange (lighter) | Yes — SwiftUI semantic |
 | `.secondary` (detail text) | Gray | Light gray | Yes — SwiftUI semantic |
 | Chart hex colors | Fixed hex values | **Same hex values** | **No — requires manual dark variants** |
+| `brand` (`.blue`) | System blue | System blue (lighter) | Yes — SwiftUI semantic |
+| `brandSecondary` (`.orange`) | System orange | System orange (lighter) | Yes — SwiftUI semantic |
+| `recurring` (`.indigo`) | System indigo | System indigo (lighter) | Yes — SwiftUI semantic |
+| `sparkline` (`.blue`) | System blue | System blue (lighter) | Yes — SwiftUI semantic |
+
+#### Chart Palette — Problem Colors
+
+These `SpendingCategory.colorHex` values have <3:1 contrast ratio against dark background (`#1E1E1E`):
+
+| Category | Hex | Contrast vs Dark BG | Recommended Dark Variant |
+|----------|-----|---------------------|-------------------------|
+| `personalCare` | `#FFEAA7` | ~2.5:1 | `#F0D890` (desaturate) |
+| `homeImprovement` | `#F7DC6F` | ~2.3:1 | `#E8CD60` (darken) |
+| `transferOut` | `#D5DBDB` | ~2.8:1 | `#B8C0C0` (darken) |
+| `other` | `#BDC3C7` | ~2.6:1 | `#A0A8AC` (darken) |
+| `income` | `#82E0AA` | ~2.9:1 | `#6FCC98` (darken slightly) |
 
 ### Chart Palette Dark Mode Strategy
 
@@ -347,6 +388,10 @@ Every element that uses color to convey meaning must have a secondary, non-color
 | Pending transaction | `.orange` badge | "Pending" text label on badge |
 | Credit utilization bar | Color fill | Percentage text label always visible |
 | Chart segments | Category color | Category name in legend; inner label at >10% |
+| Recurring frequency | Indigo badge color | Text label on badge: "Weekly" / "Monthly" / "Annual" etc. |
+| Spending delta direction | Red (increase) / Green (decrease) | Arrow icon: `arrow.up.right` / `arrow.down.right` + signed amount text |
+| Transaction status (detail) | Green dot (posted) / Orange dot (pending) | "Posted" / "Pending" text label beside dot |
+| Active filter chips | Accent background | Chip text changes from placeholder ("Category") to selected value ("Food & Drink") |
 
 ### VoiceOver Labels
 
@@ -359,6 +404,11 @@ Every element that uses color to convey meaning must have a secondary, non-color
 | Utilization gauge | "Credit utilization {percent}, {status level}" |
 | Chart (donut) | "Spending by category. Largest: {category} at {percent}" |
 | Refresh button | "Refresh accounts" + "Last updated {time}" as hint |
+| FilterChipsView | "{N} filters active" or "Transaction filters" (when none active) |
+| RecurringRow | "{merchant}, {frequency}, {amount}" |
+| RecurringView (header) | "Estimated monthly recurring cost: {amount}" |
+| TransactionDetailView | Container with combined children: merchant, amount, category, date, account, status |
+| SpendingComparison | "Spending {increased/decreased} by {amount}, {percent} {more/less} than last period" |
 
 ### Motion
 
