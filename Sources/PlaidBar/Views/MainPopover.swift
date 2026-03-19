@@ -5,6 +5,7 @@ import PlaidBarCore
 struct MainPopover: View {
     @Environment(AppState.self) private var appState
     @Environment(\.openSettings) private var openSettings
+    @State private var settingsCloseObserver: NSObjectProtocol?
 
     var body: some View {
         @Bindable var state = appState
