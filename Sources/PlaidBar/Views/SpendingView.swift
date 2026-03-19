@@ -63,6 +63,47 @@ struct SpendingView: View {
         filteredSpending.reduce(0) { $0 + $1.1 }
     }
 
+    // MARK: - Month-over-Month Comparison
+
+    private var previousPeriodStartString: String {
+        let calendar = Calendar.current
+        let now = Date()
+
+        let startDate: Date
+        let previousStart: Date
+        switch selectedPeriod {
+        case .thisWeek:
+            startDate = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+            previousStart = calendar.date(byAdding: .weekOfYear, value: -1, to: startDate) ?? now
+        case .thisMonth:
+            startDate = calendar.dateInterval(of: .month, for: now)?.start ?? now
+            previousStart = calendar.date(byAdding: .month, value: -1, to: startDate) ?? now
+        case .last30Days:
+            startDate = calendar.date(byAdding: .day, value: -30, to: now) ?? now
+            previousStart = calendar.date(byAdding: .day, value: -30, to: startDate) ?? now
+        }
+        return Self.formatDate(previousStart)
+    }
+
+    private var previousPeriodSpending: Double {
+        let prevStart = previousPeriodStartString
+        let currentStart = periodStartString
+        let filtered = appState.transactions.filter {
+            $0.date >= prevStart && $0.date < currentStart &&
+            !$0.isIncome && $0.category != .transfer && $0.category != .transferOut
+        }
+        return filtered.reduce(0) { $0 + $1.displayAmount }
+    }
+
+    private var spendingDelta: Double {
+        totalFiltered - previousPeriodSpending
+    }
+
+    private var spendingDeltaPercent: Double {
+        guard previousPeriodSpending > 0 else { return 0 }
+        return (spendingDelta / previousPeriodSpending) * 100
+    }
+
     var body: some View {
         let categories = chartCategories
         let total = totalFiltered
@@ -84,6 +125,27 @@ struct SpendingView: View {
                 .heroBalance()
                 .contentTransition(.numericText())
                 .animation(.default, value: total)
+
+            // Month-over-month comparison
+            if previousPeriodSpending > 0 {
+                VStack(spacing: Spacing.xxs) {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: spendingDelta >= 0 ? "arrow.up.right" : "arrow.down.right")
+                            .font(.caption)
+                        Text("\(spendingDelta >= 0 ? "+" : "")\(Formatters.currency(abs(spendingDelta), format: .full)) (\(Formatters.percent(abs(spendingDeltaPercent), decimals: 1)))")
+                            .font(.callout.weight(.medium))
+                    }
+                    .foregroundStyle(spendingDelta >= 0 ? SemanticColors.negative : SemanticColors.positive)
+                    .contentTransition(.numericText())
+                    .animation(.default, value: spendingDelta)
+
+                    Text("vs. last period")
+                        .microText()
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Spending \(spendingDelta >= 0 ? "increased" : "decreased") by \(Formatters.currency(abs(spendingDelta), format: .full)), \(Formatters.percent(abs(spendingDeltaPercent), decimals: 1)) \(spendingDelta >= 0 ? "more" : "less") than last period")
+            }
 
             // Chart type picker
             Picker("Chart", selection: $chartType) {
