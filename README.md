@@ -265,6 +265,8 @@ swift run PlaidBarServer --sandbox
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code style, PR process, and architecture guidelines.
 
+See [GOAL.md](GOAL.md) for the CodexBar-style product direction, design principles, and implementation priorities.
+
 ## Server API Reference
 
 The companion server exposes these localhost endpoints:
