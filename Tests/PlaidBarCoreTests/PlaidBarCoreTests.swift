@@ -191,7 +191,7 @@ struct PlaidBarCoreTests {
         #expect(MenuBarSummary.runwayText(months: months) == "4.0 mo")
         #expect(MenuBarSummary.runwayText(months: nil) == "No spend")
         #expect(MenuBarSummary.runwayText(months: 0.5) == "15d")
-        #expect(MenuBarSummary.runwayBasisText(cash: 6_000, monthlySpend: monthlySpend) == "30D spend $1.5K")
+        #expect(MenuBarSummary.runwayBasisText(cash: 6_000, monthlySpend: monthlySpend) == "30D spend $1,500")
         #expect(MenuBarSummary.runwayBasisText(cash: 0, monthlySpend: monthlySpend) == "No cash buffer")
         #expect(MenuBarSummary.runwayBasisText(cash: 6_000, monthlySpend: 0) == "No 30D spend")
     }
