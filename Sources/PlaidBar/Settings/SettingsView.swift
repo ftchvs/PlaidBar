@@ -1,6 +1,7 @@
 import SwiftUI
 import PlaidBarCore
 import Sparkle
+import AppKit
 
 struct SettingsView: View {
     @Environment(AppState.self) private var appState
@@ -31,12 +32,15 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 480, height: 380)
+        .frame(width: 520, height: 500)
     }
 }
 
 struct GeneralSettingsView: View {
     @Environment(AppState.self) private var appState
+    @State private var isShowingResetConfirmation = false
+    @State private var resetResultMessage: String?
+    @State private var resetErrorMessage: String?
 
     var body: some View {
         @Bindable var state = appState
@@ -77,8 +81,95 @@ struct GeneralSettingsView: View {
             .help("Credit cards above this utilization threshold show warning colors")
 
             Toggle("Launch at login", isOn: $state.launchAtLogin)
+
+            Section("Local Data") {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    LabeledContent("Storage path") {
+                        Text(appState.localStoragePathText)
+                            .font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+
+                    Text(appState.localStorageResolvedPathText)
+                        .detailText()
+                        .textSelection(.enabled)
+
+                    HStack {
+                        Button {
+                            revealStorageDirectory()
+                        } label: {
+                            Label("Reveal", systemImage: "folder")
+                        }
+
+                        Button {
+                            copyStoragePath()
+                        } label: {
+                            Label("Copy Path", systemImage: "doc.on.doc")
+                        }
+
+                        Spacer()
+
+                        Button(role: .destructive) {
+                            isShowingResetConfirmation = true
+                        } label: {
+                            Label("Reset Local Data", systemImage: "trash")
+                        }
+                    }
+
+                    Text("Stores the local server database, Plaid item tokens, sync cursors, and app/server auth token. App preferences such as menu bar display, notification thresholds, and launch-at-login are kept.")
+                        .detailText()
+                }
+            }
         }
         .padding()
+        .alert("Reset Local PlaidBar Data?", isPresented: $isShowingResetConfirmation) {
+            Button("Reset Local Data", role: .destructive) {
+                resetLocalData()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This deletes files under \(appState.localStoragePathText), including the SQLite database, stored Plaid access tokens, sync cursors, and the app/server auth token. It also clears currently loaded accounts, transactions, and balance history from this app. It does not revoke bank permissions, remove Plaid dashboard Items, delete Plaid credentials from your shell environment, or change app preferences. Stop and restart PlaidBarServer after resetting.")
+        }
+        .alert("Local Data Reset", isPresented: Binding(
+            get: { resetResultMessage != nil },
+            set: { if !$0 { resetResultMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(resetResultMessage ?? "")
+        }
+        .alert("Reset Failed", isPresented: Binding(
+            get: { resetErrorMessage != nil },
+            set: { if !$0 { resetErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(resetErrorMessage ?? "")
+        }
+    }
+
+    private func revealStorageDirectory() {
+        let url = appState.localStorageDirectoryURL
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    private func copyStoragePath() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(appState.localStorageResolvedPathText, forType: .string)
+    }
+
+    private func resetLocalData() {
+        do {
+            let result = try appState.resetLocalData()
+            if result.removedEntryCount == 0 {
+                resetResultMessage = "No existing files were found. \(appState.localStoragePathText) is ready for a fresh local server start."
+            } else {
+                resetResultMessage = "Removed \(result.removedEntryCount) item\(result.removedEntryCount == 1 ? "" : "s") from \(appState.localStoragePathText). Restart PlaidBarServer before reconnecting accounts."
+            }
+        } catch {
+            resetErrorMessage = error.localizedDescription
+        }
     }
 }
 
