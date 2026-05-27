@@ -139,15 +139,27 @@ struct StatusView: View {
                                 .font(.callout.weight(.medium))
                                 .lineLimit(1)
 
-                            Text(item.lastSync.map { "Updated \(Formatters.relativeDate($0))" } ?? "No sync recorded")
+                            Text(statusDetail(for: item))
                                 .detailText()
                         }
 
                         Spacer()
 
-                        Text(label(for: item.status))
-                            .microText()
-                            .foregroundStyle(color(for: item.status))
+                        VStack(alignment: .trailing, spacing: Spacing.xs) {
+                            Text(label(for: item.status))
+                                .microText()
+                                .foregroundStyle(color(for: item.status))
+
+                            if item.status != .connected {
+                                Button {
+                                    Task { await appState.reconnectItem(itemId: item.id) }
+                                } label: {
+                                    Label("Reconnect", systemImage: "link.badge.plus")
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.mini)
+                            }
+                        }
                     }
                     .padding(.vertical, Spacing.xs)
                 }
@@ -250,6 +262,17 @@ struct StatusView: View {
         case .connected: "Connected"
         case .loginRequired: "Login"
         case .error: "Error"
+        }
+    }
+
+    private func statusDetail(for item: ItemStatus) -> String {
+        switch item.status {
+        case .connected:
+            item.lastSync.map { "Updated \(Formatters.relativeDate($0))" } ?? "No sync recorded"
+        case .loginRequired:
+            "Plaid requires a fresh bank login. Reconnect this item."
+        case .error:
+            "The last Plaid request failed. Reconnect or try refreshing again."
         }
     }
 }

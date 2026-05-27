@@ -488,6 +488,17 @@ final class AppState {
         }
     }
 
+    func reconnectItem(itemId: String) async {
+        do {
+            let linkResponse = try await serverClient.createUpdateLinkToken(itemId: itemId)
+            if let url = URL(string: linkResponse.linkUrl) {
+                NSWorkspace.shared.open(url)
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     func startDemoMode() {
         isDemoMode = true
         loadDemoData()
